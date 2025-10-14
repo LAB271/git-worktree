@@ -1,0 +1,331 @@
+#!/usr/bin/env bash
+
+alias pb='git push origin `git rev-parse --abbrev-ref HEAD` -f' # push back active branch
+alias pd='git pull origin `git rev-parse --abbrev-ref HEAD` -f' # pull down active branch
+alias venv=source .*/bin/activate
+
+# =======================================================================
+# Git Worktree Aliases
+# also see aliases
+#      venv=source .*/bin/activate
+#      make env # a standard job to run virtualenv .package
+# =======================================================================
+
+# Helper function to get main worktree path
+_get_main_worktree() {
+    git worktree list | head -1 | awk '{print $1}'
+}
+
+# Helper function to get worktree root (handles being in subdirectories)
+_get_worktree_root() {
+    git rev-parse --show-toplevel 2>/dev/null
+}
+
+# gw: Git Worktree - Create new worktree
+# Usage: gw feat/authentication
+#        gw bugfix/issue-123
+alias gw='_git_worktree_create'
+_git_worktree_create() {
+    # WORKTREE_BASE: Base directory for all worktrees (relative to repo root)
+    BASE=$(basename "$(git worktree list | head -n 1 | awk '{print $1}')")
+    WORKTREE_BASE="../$BASE-worktree"
+
+    if [ -z "$1" ]; then
+        echo "Usage: gw <branch-name>"
+        echo "Example: gw feat/authentication"
+        echo "         gw spike/authentication"
+        echo "         gw fix/authentication"
+        return 1
+    fi
+
+    local branch_name="$1"
+    local worktree_name=$(echo "$branch_name" | sed 's/\//-/g')  # Replace / with -
+    local worktree_path="${WORKTREE_BASE}/${worktree_name}"
+
+    echo "Creating worktree: $worktree_path"
+    echo "Branch: $branch_name"
+
+    # Create worktree
+    if git worktree add "$worktree_path" -b "$branch_name"; then
+        echo "✅ Worktree created successfully!"
+        echo "To move there: wm $worktree_name"
+        echo "To setup:      cd $worktree_path && make env && venv"   # virtualenv .env && source .venv/bin/activate
+    else
+        echo "❌ Failed to create worktree"
+        return 1
+    fi
+}
+
+# gwc: Git Worktree Create and setup - Create worktree + auto-setup environment
+# Usage: gwc feat/authentication
+alias gwc='_git_worktree_create_and_setup'
+_git_worktree_create_and_setup() {
+    # WORKTREE_BASE: Base directory for all worktrees (relative to repo root)
+    BASE=$(basename "$(git worktree list | head -n 1 | awk '{print $1}')")
+    WORKTREE_BASE="../$BASE-worktree"
+
+    if [ -z "$1" ]; then
+        echo "Usage: gwc <branch-name>"
+        echo "Example: gwc feat/authentication"
+        echo "This creates the worktree AND runs 'make env && venv'" # virtualenv .env && source .venv/bin/activate
+        return 1
+    fi
+
+    local branch_name="$1"
+    local worktree_name=$(echo "$branch_name" | sed 's/\//-/g')
+    local worktree_path="${WORKTREE_BASE}/${worktree_name}"
+
+    echo "🌳 Creating worktree: $worktree_path"
+    echo "📋 Branch: $branch_name"
+
+    # Create worktree
+    if git worktree add "$worktree_path" -b "$branch_name"; then
+        echo "✅ Worktree created!"
+
+        # Move to worktree
+        cd "$worktree_path" || return 1
+        echo "📂 Changed to: $(pwd)"
+
+        # Setup environment
+        echo "🔧 Running 'make env'..."
+        if make env; then
+            echo "✅ Environment setup complete!"
+            echo ""
+            echo "🎯 Ready to work! Run 'venv' to activate environment"
+            echo ""
+            # Try to activate (may not work in some shells, but worth trying)
+            source .*/bin/activate 2>/dev/null && echo "✅ Virtual environment activated!" || echo "Run: venv"
+        else
+            echo "❌ 'make env' failed - please check errors above"
+            return 1
+        fi
+    else
+        echo "❌ Failed to create worktree"
+        return 1
+    fi
+}
+
+# wm: Worktree Move - Move to a worktree
+# Usage: wm feat-authentication
+#        wm bugfix-issue-123
+alias wm='_worktree_move'
+_worktree_move() {
+    # WORKTREE_BASE: Base directory for all worktrees (relative to repo root)
+    BASE=$(basename "$(git worktree list | head -n 1 | awk '{print $1}')")
+    WORKTREE_BASE="$BASE-worktree"
+
+    if [ -z "$1" ]; then
+        echo "Usage: wm <worktree-name>"
+        _list_worktrees
+        return 1
+    fi
+
+    # Check if we're currently in a worktree path and need to go back first
+    local current_path=$(pwd)
+    if [[ "$current_path" == *"/git-worktree/"* ]] || [[ "$current_path" == *"${WORKTREE_BASE}"* ]]; then
+        # We're in a worktree, navigate back one level
+        cd .. || return 1
+        echo "📍 Navigated back from current worktree"
+    fi
+
+    local worktree_name=$(echo "$1" | sed 's/\//-/g')
+    local worktree_path="../${WORKTREE_BASE}/${worktree_name}"
+
+    if [ -d "$worktree_path" ]; then
+        cd "$worktree_path" || return 1
+        echo "📂 Moved to: $(pwd)"
+        echo "🌳 Branch: $(git branch --show-current)"
+
+        # Check if .virtual_env exists
+        local venv_dir=$(ls -d .[^.]*/bin/python 2>/dev/null | head -n1 | cut -d'/' -f1)
+
+        if [ -d "$venv_dir" ]; then
+            echo "✅ Virtual environment exists ($venv_dir/)"
+        else
+            echo "⚠️  No virtual environment found - create local env"
+        fi
+    else
+        echo "❌ Worktree not found: $worktree_path"
+        _list_worktrees
+        return 1
+    fi
+}
+
+# lw: List Worktrees - Show all worktrees with status
+alias lw='_list_worktrees'
+_list_worktrees() {
+    echo "Git Worktrees:"
+    echo "=============="
+
+    git worktree list | while IFS= read -r line; do
+        local path=$(echo "$line" | awk '{print $1}')
+        local branch=$(echo "$line" | awk '{print $3}' | tr -d '[]')
+
+        # Check if this is the current worktree
+        local current_path=$(git rev-parse --show-toplevel 2>/dev/null)
+        local marker=""
+        if [ "$path" = "$current_path" ]; then
+            marker="👉 "
+        fi
+
+        # Check if .virtual_env exists in this worktree
+        # local venv_dir=$(ls -d $path/.[^.]*/bin/python 2>/dev/null | head -n1 | rev | cut -d'/' -f3 | rev)
+        venv_dir=""
+        for potential_venv in "$path"/.*; do
+            if [ -d "$potential_venv" ] && [ "$(basename "$potential_venv")" != "." ] && [ "$(basename "$potential_venv")" != ".." ]; then
+                if [ -f "$potential_venv/bin/python" ]; then
+                    venv_dir=$(basename "$potential_venv")
+                    break
+                fi
+            fi
+        done
+
+        local env_status=""
+        if [ -n "$venv_dir" ]; then
+            env_status="[✅ $venv_dir]"
+        else
+            env_status="[❌ no env]"
+        fi
+
+        echo "${marker}${path}"
+        echo "   Branch: ${branch} ${env_status}"
+    done
+
+    echo ""
+    echo "Use: wm <name> to move to worktree"
+    echo "Use: bw to return to main"
+}
+
+# bw: Back to main Worktree
+alias bw='_back_to_main'
+_back_to_main() {
+    local main_path=$(_get_main_worktree)
+
+    if [ -z "$main_path" ]; then
+        echo "❌ Could not find main worktree"
+        return 1
+    fi
+
+    cd "$main_path" || return 1
+    echo "📂 Back to main: $(pwd)"
+    echo "🌳 Branch: $(git branch --show-current)"
+
+    # Check if .virtual_env exists
+    local venv_dir=$(ls -d .[^.]*/bin/python 2>/dev/null | head -n1 | cut -d'/' -f1)
+
+    if [ -n "$venv_dir" ]; then
+        echo "✅ Virtual environment exists ($venv_dir/)"
+    else
+        echo "⚠️  No virtual environment found - run 'make env'"  # virtualenv .env
+    fi
+}
+
+# rw: Remove Worktree
+# Usage: rw feat-authentication
+alias rw='_remove_worktree'
+_remove_worktree() {
+    # WORKTREE_BASE: Base directory for all worktrees (relative to repo root)
+    BASE=$(basename "$(git worktree list | head -n 1 | awk '{print $1}')")
+    WORKTREE_BASE="../$BASE-worktree"
+
+    if [ -z "$1" ]; then
+        echo "Usage: rw <worktree-name>"
+        echo "Available worktrees:"
+        lw
+        return 1
+    fi
+
+    local worktree_name=$(echo "$1" | sed 's/\//-/g')  # Replace / with -
+    local worktree_path="${WORKTREE_BASE}/${worktree_name}"
+
+    # Verify worktree exists
+    if ! git worktree list | grep -q "$worktree_path"; then
+        echo "❌ Worktree not found: $worktree_path"
+        echo "Available worktrees:"
+        lw
+        return 1
+    fi
+
+    # Confirm removal
+    echo "⚠️  About to remove worktree:"
+    echo "   Path: $worktree_path"
+    echo "   Branch: $(git worktree list | grep "$worktree_path" | awk '{print $3}' | tr -d '[]')"
+    echo ""
+    read -p "Continue? [y/N] " -n 1 -r
+    echo
+
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        if git worktree remove "$worktree_path"; then
+            git branch -D $1
+            echo "✅ Worktree removed: $worktree_path"
+        else
+            echo "❌ Failed to remove worktree"
+            echo "Try: git worktree remove --force $worktree_path"
+            return 1
+        fi
+    else
+        echo "❌ Cancelled"
+    fi
+}
+
+# pw: Print current Worktree path
+alias pw='_print_worktree'
+_print_worktree() {
+    local worktree_path=$(_get_worktree_root)
+
+    if [ -z "$worktree_path" ]; then
+        echo "❌ Not in a git repository"
+        return 1
+    fi
+
+    local branch=$(git branch --show-current)
+    local is_main=$(git worktree list | head -1 | grep -q "$worktree_path" && echo "yes" || echo "no")
+
+    echo "Current Worktree:"
+    echo "================="
+    echo "Path:   $worktree_path"
+    echo "Branch: $branch"
+    echo "Main:   $is_main"
+
+    # Check if .virtual_env exists in this worktree
+    local venv_dir=$(ls -d $path/.[^.]*/bin/python 2>/dev/null | head -n1 | cut -d'/' -f2)
+    if [ -n $venv_dir ]; then
+        echo "Env:    ✅ $venv_dir exists"
+        if [ -n "$VIRTUAL_ENV" ]; then
+            echo "Active: ✅ $(basename $VIRTUAL_ENV)"
+        else
+            echo "Active: ❌ (run: venv)"  # alias venv=source .*/bin/activate
+        fi
+    else
+        echo "Env:    ❌ No .venv (run: virtualenv .PACKAGE)"
+    fi
+}
+
+# cw: Cleanup removed Worktrees
+alias cw='_cleanup_worktrees'
+_cleanup_worktrees() {
+    echo "Pruning removed worktrees..."
+    git worktree prune -v
+    echo "✅ Cleanup complete"
+}
+
+# Combined alias for quick workflow
+alias gww='_git_worktree_workflow'
+_git_worktree_workflow() {
+    echo "Git Worktree Quick Workflow"
+    echo "============================"
+    echo "1. gw <branch>   - Create worktree"
+    echo "2. gwc <branch>  - Create + setup (make dev + venv)"
+    echo "3. wm <name>     - Move to worktree"
+    echo "4. lw            - List all worktrees"
+    echo "5. bw            - Back to main"
+    echo "6. rw <name>     - Remove worktree"
+    echo "7. pw            - Print current worktree info"
+    echo "8. cw            - Cleanup pruned worktrees"
+    echo ""
+    lw
+}
+
+# ======================================================================
+# End PROJECT_A Git Worktree Aliases
+# ======================================================================
