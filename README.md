@@ -2,6 +2,94 @@
 
 A streamlined collection of templates and utilities for managing Git worktrees efficiently across your Python development workflow with included virtualenv handling.
 
+### Quick Start Example
+
+Here's a complete example showing how to create a worktree and set up your development environment:
+
+```bash
+# 1. Start in your main repository
+cd ~/code/project_a
+git branch
+# * main
+
+# 2. Create a new worktree for a feature (using our gwc alias)
+gwc feat/user-authentication
+# 🌳 Creating worktree: ../project_a-worktree/feat-user-authentication
+# 📋 Branch: feat/user-authentication
+# ✅ Worktree created!
+# 📂 Changed to: /Users/dev/code/project_a-worktree/feat-user-authentication
+# 🔧 Running 'make env'...
+# virtualenv .project_a
+# Installing dependencies...
+# ✅ Environment setup complete!
+# ✅ Virtual environment activated!
+
+# 3. You're now in the new worktree with environment ready
+pwd
+# /Users/dev/code/project_a-worktree/feat-user-authentication
+
+git branch --show-current
+# feat/user-authentication
+
+which python
+# /Users/dev/code/project_a-worktree/feat-user-authentication/.project_a/bin/python
+
+# 4. Start coding immediately
+# ... write your code ...
+
+# 5. Check all your worktrees
+lw
+# Git Worktrees:
+# ==============
+# /Users/dev/code/project_a
+#    Branch: main [✅ .project_a]
+#
+# 👉 /Users/dev/code/project_a-worktree/feat-user-authentication
+#    Branch: feat/user-authentication [✅ .project_a]
+
+# 6. Return to main when needed
+bw
+# 📂 Back to main: /Users/dev/code/project_a
+# 🌳 Branch: main
+```
+
+**What just happened?**
+
+1. **`gwc feat/user-authentication`** did all of this automatically:
+   - Created directory: `../project_a-worktree/feat-user-authentication`
+   - Created new branch: `feat/user-authentication`
+   - Changed to the new directory
+   - Ran `make env` to create virtual environment (`.project_a/`)
+   - Installed all dependencies from `requirements.txt`
+   - Activated the virtual environment
+
+2. **Directory structure** created:
+   ```
+   ~/code/
+   ├── project_a/                                      # Original repo (main branch)
+   │   ├── .git/                                       # Git database (shared)
+   │   ├── .project_a/                                 # Main's virtualenv
+   │   └── ...
+   └── project_a-worktree/                             # Worktree container
+       └── feat-user-authentication/                   # Your new worktree
+           ├── .git -> ../../project_a/.git/worktrees/ # Links to shared Git
+           ├── .project_a/                             # Isolated virtualenv
+           └── ...                                     # All project files
+   ```
+
+3. **Each worktree is independent**:
+   - Separate working directory
+   - Own virtual environment
+   - Own installed packages
+   - Own IDE settings
+   - But shares Git history (efficient!)
+
+4. **Virtual environment detection**:
+   - The `lw` command shows `[✅ .project_a]` indicating the virtualenv exists
+   - Works with any hidden directory: `.venv`, `.project_a`, `.env`, etc.
+   - The `venv` alias (`source .*/bin/activate`) activates it in any worktree
+
+
 ## What Are Git Worktrees?
 
 Git worktrees enable you to have multiple working directories attached to a single repository, each checked out to different branches. Instead of constantly switching branches and stashing changes, you can work on multiple tasks simultaneously in separate directories that all share the same Git history.
@@ -18,8 +106,9 @@ This repository provides:
 
 ## Getting Started
 
-
 ### Installation
+
+All script extensions are available as shell extensions.
 
 ```bash
 # Add to your ~/.bashrc or ~/.zshrc
@@ -30,6 +119,8 @@ cat /path/to/git-worktree/bash_aliases >> ~/.bashrc
 ```
 
 ### Essential Git Worktree Commands
+
+For manual worktree management (our aliases simplify these):
 
 ```bash
 # View all worktrees
@@ -57,7 +148,7 @@ This toolkit includes a comprehensive set of bash aliases that simplify common w
 | Command | Description |
 |---------|-------------|
 | `gw <branch>` | Create a new worktree |
-| `gwc <branch>` | Create worktree + auto-setup environment |
+| `gwc <branch>` | Create worktree + auto-setup environment `make env`|
 | `wm <name>` | Move to a specific worktree |
 | `lw` | List all worktrees with status |
 | `bw` | Back to main worktree |
