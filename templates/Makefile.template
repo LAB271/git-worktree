@@ -1,5 +1,15 @@
 #!/usr/bin/make -f
 
+# Copyright (c) 2025 Schuberg Philis B.V.
+# SPDX-License-Identifier: Apache-2.0
+
+# Makefile template for Python projects using git worktrees
+# This template provides standard targets for development workflow:
+# - env: creates virtual environment and installs dependencies
+# - test: runs tests with coverage reporting
+# - clean: removes build artifacts and virtual environment
+# Replace PACKAGE_NAME_HERE with your actual package name
+
 SHELL := /bin/bash
 
 PACKAGE=PACKAGE_NAME_HERE
@@ -33,6 +43,7 @@ clean: ## Clean all build files and virtualenv
 
 env: $(VIRTUALENV)/bin/python ## create the virtualenv
 	@$(PYTHON) -m pip install --upgrade pip
+	@$(PYTHON) -m pip install pytest coverage
 	@$(PYTHON) -m pip install -r requirements.txt
 	@$(PYTHON) -m pip install -e .
 

@@ -99,6 +99,7 @@ Git worktrees enable you to have multiple working directories attached to a sing
 This repository provides:
 
 - **Bash Aliases**: Streamlined commands for worktree operations with smart defaults
+- **Bash Completion**: Provides tab completion for worktree names
 - **Project Templates**: Ready-to-use Makefile for Python projects with virtual environment management
 - **Virtual Environment Integration**: Automatic detection and management of Python venvs
 - **Standardized Workflows**: Consistent setup across all worktrees
@@ -111,11 +112,14 @@ This repository provides:
 All script extensions are available as shell extensions.
 
 ```bash
-# Add to your ~/.bashrc or ~/.zshrc
+# Add aliases and completion to your ~/.bashrc or ~/.zshrc
 source /path/to/git-worktree/bash_aliases
+source /path/to/git-worktree/bash_completion
 
 # Or copy the contents directly into your shell config
 cat /path/to/git-worktree/bash_aliases >> ~/.bashrc
+cat /path/to/git-worktree/bash_completion >> ~/.bashrc
+h_aliases >> ~/.bashrc
 ```
 
 ### Essential Git Worktree Commands
@@ -147,15 +151,15 @@ This toolkit includes a comprehensive set of bash aliases that simplify common w
 
 | Command | Description |
 |---------|-------------|
-| `gw <branch>` | Create a new worktree |
+| `gw <branch>`  | Create a new worktree |
 | `gwc <branch>` | Create worktree + auto-setup environment `make env`|
-| `wm <name>` | Move to a specific worktree |
-| `lw` | List all worktrees with status |
-| `bw` | Back to main worktree |
-| `rw <name>` | Remove a worktree (with confirmation) |
-| `pw` | Print current worktree information |
-| `cw` | Cleanup pruned worktrees |
-| `gww` | Show quick reference help |
+| `wm <name>`    | Move to a specific worktree |
+| `lw`           | List all worktrees with status |
+| `bw`           | Back to main worktree |
+| `rw <name>`    | Remove a worktree (with confirmation) |
+| `pw`           | Print current worktree information |
+| `cw`           | Cleanup pruned worktrees |
+| `gww`          | Show quick reference help |
 
 ### How It Works
 
@@ -555,8 +559,9 @@ Keep worktrees organized and predictable:
 - [Official Git Worktree Documentation](https://git-scm.com/docs/git-worktree)
 - [Pro Git Book](https://git-scm.com/book/en/v2)
 - [Python Virtual Environments (venv) — Official Docs](https://docs.python.org/3/library/venv.html)
-- [virtualenv — PyPI Project](https://pypi.org/project/virtualenv/)
 - [Real Python: Python Virtual Environments: A Primer](https://realpython.com/python-virtual-environments-a-primer/)
+- [GNU Bash Completion documentation](https://github.com/scop/bash-completion)
+- [Bash Programmable Completion](https://www.gnu.org/software/bash/manual/html_node/Programmable-Completion.html)
 
 ## License
 

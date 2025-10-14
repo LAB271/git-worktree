@@ -1,8 +1,30 @@
 #!/usr/bin/env bash
 
-alias pb='git push origin `git rev-parse --abbrev-ref HEAD` -f' # push back active branch
-alias pd='git pull origin `git rev-parse --abbrev-ref HEAD` -f' # pull down active branch
-alias venv=source .*/bin/activate
+
+# =======================================================================
+# Git worktrees enable multiple working directories for a single 
+# repository, allowing parallel work on different branches.
+#
+# This powerful feature lets you:
+# - Work on multiple features simultaneously without branch switching
+# - Enable multiple Agentic AI sessions without interference
+# - Review pull requests while keeping your main work untouched
+# - Test different versions of code in separate directories
+# - Maintain isolated development environments per feature
+#
+# Copyright (c) 2025 Schuberg Philis B.V.
+# SPDX-License-Identifier: Apache-2.0
+# =======================================================================
+
+# =======================================================================
+# General Git Aliases
+# =======================================================================
+# push back active branch
+alias pb='git push origin `git rev-parse --abbrev-ref HEAD` -f' 
+# pull down active branch
+alias pd='git pull origin `git rev-parse --abbrev-ref HEAD` -f' 
+# activate local virtualenv
+alias venv='source .*/bin/activate'
 
 # =======================================================================
 # Git Worktree Aliases
@@ -27,7 +49,7 @@ _get_worktree_root() {
 alias gw='_git_worktree_create'
 _git_worktree_create() {
     # WORKTREE_BASE: Base directory for all worktrees (relative to repo root)
-    BASE=$(basename "$(git worktree list | head -n 1 | awk '{print $1}')")
+    BASE=$(basename "$(_get_main_worktree)")
     WORKTREE_BASE="../$BASE-worktree"
 
     if [ -z "$1" ]; then
@@ -61,7 +83,7 @@ _git_worktree_create() {
 alias gwc='_git_worktree_create_and_setup'
 _git_worktree_create_and_setup() {
     # WORKTREE_BASE: Base directory for all worktrees (relative to repo root)
-    BASE=$(basename "$(git worktree list | head -n 1 | awk '{print $1}')")
+    BASE=$(basename "$(_get_main_worktree)")
     WORKTREE_BASE="../$BASE-worktree"
 
     if [ -z "$1" ]; then
@@ -111,7 +133,7 @@ _git_worktree_create_and_setup() {
 alias wm='_worktree_move'
 _worktree_move() {
     # WORKTREE_BASE: Base directory for all worktrees (relative to repo root)
-    BASE=$(basename "$(git worktree list | head -n 1 | awk '{print $1}')")
+    BASE=$(basename "$(_get_main_worktree)")
     WORKTREE_BASE="$BASE-worktree"
 
     if [ -z "$1" ]; then
@@ -225,7 +247,7 @@ _back_to_main() {
 alias rw='_remove_worktree'
 _remove_worktree() {
     # WORKTREE_BASE: Base directory for all worktrees (relative to repo root)
-    BASE=$(basename "$(git worktree list | head -n 1 | awk '{print $1}')")
+    BASE=$(basename "$(_get_main_worktree)")
     WORKTREE_BASE="../$BASE-worktree"
 
     if [ -z "$1" ]; then
@@ -326,6 +348,6 @@ _git_worktree_workflow() {
     lw
 }
 
-# ======================================================================
-# End PROJECT_A Git Worktree Aliases
-# ======================================================================
+# =======================================================================
+# End Git Worktree Aliases
+# =======================================================================
