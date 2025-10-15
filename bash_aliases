@@ -211,6 +211,7 @@ _list_worktrees() {
 
         echo "${marker}${path}"
         echo "   Branch: ${branch} ${env_status}"
+        echo ""
     done
 
     echo ""
@@ -334,7 +335,7 @@ _cleanup_worktrees() {
 # Combined alias for quick workflow
 alias gww='_git_worktree_workflow'
 _git_worktree_workflow() {
-    echo "Git Worktree Quick Workflow"
+    echo "Git Worktree Quick Workflow:"
     echo "============================"
     echo "1. gw <branch>   - Create worktree"
     echo "2. gwc <branch>  - Create + setup (make dev + venv)"
