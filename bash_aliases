@@ -180,20 +180,20 @@ _list_worktrees() {
     echo "=============="
 
     git worktree list | while IFS= read -r line; do
-        local path=$(echo "$line" | awk '{print $1}')
+        local worktree_path=$(echo "$line" | awk '{print $1}')
         local branch=$(echo "$line" | awk '{print $3}' | tr -d '[]')
 
         # Check if this is the current worktree
         local current_path=$(git rev-parse --show-toplevel 2>/dev/null)
         local marker=""
-        if [ "$path" = "$current_path" ]; then
+        if [ "$worktree_path" = "$current_path" ]; then
             marker="👉 "
         fi
 
         # Check if .virtual_env exists in this worktree
-        # local venv_dir=$(ls -d $path/.[^.]*/bin/python 2>/dev/null | head -n1 | rev | cut -d'/' -f3 | rev)
+        # local venv_dir=$(ls -d $worktree_path/.[^.]*/bin/python 2>/dev/null | head -n1 | rev | cut -d'/' -f3 | rev)
         venv_dir=""
-        for potential_venv in "$path"/.*; do
+        for potential_venv in "$worktree_path"/.*; do
             if [ -d "$potential_venv" ] && [ "$(basename "$potential_venv")" != "." ] && [ "$(basename "$potential_venv")" != ".." ]; then
                 if [ -f "$potential_venv/bin/python" ]; then
                     venv_dir=$(basename "$potential_venv")
@@ -209,7 +209,7 @@ _list_worktrees() {
             env_status="[❌ no env]"
         fi
 
-        echo "${marker}${path}"
+        echo "${marker}${worktree_path}"
         echo "   Branch: ${branch} ${env_status}"
         echo ""
     done
@@ -311,7 +311,7 @@ _print_worktree() {
     echo "Main:   $is_main"
 
     # Check if .virtual_env exists in this worktree
-    local venv_dir=$(ls -d $path/.[^.]*/bin/python 2>/dev/null | head -n1 | cut -d'/' -f2)
+    local venv_dir=$(ls -d $worktree_path/.[^.]*/bin/python 2>/dev/null | head -n1 | cut -d'/' -f2)
     if [ -n $venv_dir ]; then
         echo "Env:    ✅ $venv_dir exists"
         if [ -n "$VIRTUAL_ENV" ]; then
