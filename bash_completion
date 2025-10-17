@@ -28,6 +28,7 @@ _get_branch_suggestions() {
     echo "spike/"
     echo "chore/"
     echo "stage/"
+    echo "release/"
     echo "test/"
 }
 
