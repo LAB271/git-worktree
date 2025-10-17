@@ -449,13 +449,17 @@ $ wm backend     # Switch to backend
 $ bw             # Back to main for releases
 ```
 
-**Branch naming for clean organization:**
+**Branch naming for clean organization (part of autocompletion):**
 ```bash
 # Use consistent prefixes
 $ gw feat/user-auth      → feat-user-auth/
 $ gw fix/bug-123         → fix-bug-123/
+$ gw bugfix/tck-123      → bugfix-tck-123/
 $ gw spike/new-tech      → spike-new-tech/
+$ gw chore/cleanup       → chore-cleanup/
+$ gw stage/phase3        → stage-phase3/
 $ gw release/v2.0        → release-v2.0/
+$ gw test/iam            → test-iam/
 ```
 
 ## Practical Examples
