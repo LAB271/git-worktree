@@ -1,6 +1,6 @@
 # Git Worktree Management Toolkit
 
-A streamlined collection of templates and utilities for managing Git worktrees efficiently across your Python development workflow with included virtualenv handling.
+A streamlined collection of templates and utilities for managing Git worktrees efficiently across your Python development workflow including tab completion and virtualenv handling.
 
 ### Quick Start Example
 
