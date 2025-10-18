@@ -23,8 +23,9 @@ TARGETS = check env test
 all: $(TARGETS)
 
 check: ## Validate primary development dependencies
-	@python --version > /dev/null
-	@python -m pip > /dev/null
+	@virtualenv --version > /dev/null
+	@$(PYTHON) --version > /dev/null
+	@$(PYTHON) -m pip > /dev/null
 	@echo "All required tools available"
 
 freeze:  ## Freezes pip requirements
