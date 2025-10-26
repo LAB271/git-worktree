@@ -50,7 +50,8 @@ alias gw='_git_worktree_create'
 _git_worktree_create() {
     # WORKTREE_BASE: Base directory for all worktrees (relative to repo root)
     BASE=$(basename "$(_get_main_worktree)")
-    WORKTREE_BASE="../$BASE-worktree"
+    DIRNAME=$(dirname "$(_get_main_worktree)")
+    WORKTREE_BASE="$DIRNAME/$BASE-worktree"
 
     if [ -z "$1" ]; then
         echo "Usage: gw <branch-name>"
@@ -84,7 +85,8 @@ alias gwc='_git_worktree_create_and_setup'
 _git_worktree_create_and_setup() {
     # WORKTREE_BASE: Base directory for all worktrees (relative to repo root)
     BASE=$(basename "$(_get_main_worktree)")
-    WORKTREE_BASE="../$BASE-worktree"
+    DIRNAME=$(dirname "$(_get_main_worktree)")
+    WORKTREE_BASE="$DIRNAME/$BASE-worktree"
 
     if [ -z "$1" ]; then
         echo "Usage: gwc <branch-name>"
@@ -134,7 +136,8 @@ alias wm='_worktree_move'
 _worktree_move() {
     # WORKTREE_BASE: Base directory for all worktrees (relative to repo root)
     BASE=$(basename "$(_get_main_worktree)")
-    WORKTREE_BASE="$BASE-worktree"
+    DIRNAME=$(dirname "$(_get_main_worktree)")
+    WORKTREE_BASE="$DIRNAME/$BASE-worktree"
 
     if [ -z "$1" ]; then
         echo "Usage: wm <worktree-name>"
@@ -142,16 +145,8 @@ _worktree_move() {
         return 1
     fi
 
-    # Check if we're currently in a worktree path and need to go back first
-    local current_path=$(pwd)
-    if [[ "$current_path" == *"/git-worktree/"* ]] || [[ "$current_path" == *"${WORKTREE_BASE}"* ]]; then
-        # We're in a worktree, navigate back one level
-        cd .. || return 1
-        echo "📍 Navigated back from current worktree"
-    fi
-
     local worktree_name=$(echo "$1" | sed 's/\//-/g')
-    local worktree_path="../${WORKTREE_BASE}/${worktree_name}"
+    local worktree_path="${WORKTREE_BASE}/${worktree_name}"
 
     if [ -d "$worktree_path" ]; then
         cd "$worktree_path" || return 1
@@ -190,8 +185,6 @@ _list_worktrees() {
             marker="👉 "
         fi
 
-        # Check if .virtual_env exists in this worktree
-        # local venv_dir=$(ls -d $worktree_path/.[^.]*/bin/python 2>/dev/null | head -n1 | rev | cut -d'/' -f3 | rev)
         venv_dir=""
         for potential_venv in "$worktree_path"/.*; do
             if [ -d "$potential_venv" ] && [ "$(basename "$potential_venv")" != "." ] && [ "$(basename "$potential_venv")" != ".." ]; then
